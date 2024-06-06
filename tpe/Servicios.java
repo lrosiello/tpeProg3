@@ -24,16 +24,16 @@ public class Servicios {
 		reader.readTasks(pathTareas);
 	}
 
-	/*
-	 * Complejidad: O(1)
-	 */
+	
+	//Complejidad: O(1) gracias al mapeo
+	 
 	public Tarea servicio1(String ID) {
 		return reader.getTareas().get(ID);
 	}
 
-	/*
-	 * Complejidad: O(t) porque t es el número de tareas
-	 */
+	
+	//Complejidad: O(t) porque t es el número de tareas
+	
 	public List<Tarea> servicio2(boolean esCritica) {
 		List<Tarea> result = new ArrayList<>();
 		for (Tarea tarea : reader.getTareas().values()) {
@@ -44,18 +44,13 @@ public class Servicios {
 		return result;
 	}
 
-	/*
-	 * Complejidad: O(t) porque t es el número de tareas
-	 */
+	
+	//O(n) en el peor de los casos si el arbol esta muy desbalanceado,
+	// O(log n + t) en el mejor de los casos si el árbol está balanceado, donde n es el primer
+	// nodo que cumpla con el rango, y t son todas las tareas procesadas en ese rango
+	
 	public List<Tarea> servicio3(int prioridadInferior, int prioridadSuperior) {
-		List<Tarea> result = new ArrayList<>();
-		for (Tarea tarea : reader.getTareas().values()) {
-			int prioridad = tarea.getNivelPrioridad();
-			if (prioridad >= prioridadInferior && prioridad <= prioridadSuperior) {
-				result.add(tarea);
-			}
-		}
-		return result;
+		return reader.getArbolTarea().tareasPorRango(prioridadInferior, prioridadSuperior);
 	}
 
 }
