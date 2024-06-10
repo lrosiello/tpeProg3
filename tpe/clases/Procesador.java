@@ -43,6 +43,12 @@ public class Procesador {
 	public List<Tarea> getTareasAsignadas() {
 		return tareasAsignadas;
 	}
+	
+	public void reset() {
+		tareasAsignadas.clear();
+		tiempoTotalTareas=0;
+		cantidadCriticas = 0;
+	}
 
 	public void agregarTarea(Tarea tarea) {
 		if (tarea.esCritica()) {

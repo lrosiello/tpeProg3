@@ -1,5 +1,6 @@
 package tpe;
 
+import tpe.clases.Procesador;
 import tpe.clases.Solucion;
 import tpe.clases.Tarea;
 
@@ -23,7 +24,7 @@ public class Main {
 		System.out.println(servicios.servicio3(30, 90));
 
 		float tiempoLimite = 100.0f;
-        Solucion solucion = servicios.backTracking(tiempoLimite);
+        Solucion<Tarea> solucion = servicios.backTracking(tiempoLimite);
 
         // SERVICIO DE BACKTRACKING ASIGNANDO TAREAS
         System.out.println("Mejor solución encontrada:");
@@ -31,5 +32,15 @@ public class Main {
             System.out.println(tarea);
         }
         System.out.println("Tiempo total: " + solucion.getMejorTiempo());
+        
+        Solucion<Procesador> solucion2 = servicios.greedy(tiempoLimite);
+        
+        // SERVICIO GREEDY DE  ASIGNADO DE TAREAS
+        System.out.println("Mejor solución Greedy encontrada:");
+        
+        for (Procesador procesador : solucion2.getMejorAsignacion()) {
+            System.out.println("procesador: " + procesador.getId() + " con tareas " + procesador.getTareasAsignadas());
+        }
+        System.out.println("Tiempo total: " + solucion2.getMejorTiempo());
 	}
 }

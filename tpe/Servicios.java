@@ -68,101 +68,116 @@ public class Servicios {
 	 * funcionalidad, pero luego opte por reutilizar el mismo arbolbinario
 	 * ArbolTarea usado para la obtencion de uno de los servicios de obtencion de
 	 * tareas por rango de prioridad. esto me dio una estructura firme y una
-	 * complejidad promedio o(p*t) donde p es la cantidad de procesadores y t la cantidad de tareas.
-	 * Si bien es similar a la complejidad de 2 arraylist, el arbol de tareas me da la posibilidad
-	 * de poda y cortar el recorrido innecesario, mejorando un poco el costo computacional.
-	 * tambien se ahorra un poco en memoria contigua.
+	 * complejidad promedio o(p*t) donde p es la cantidad de procesadores y t la
+	 * cantidad de tareas. Si bien es similar a la complejidad de 2 arraylist, el
+	 * arbol de tareas me da la posibilidad de poda y cortar el recorrido
+	 * innecesario, mejorando un poco el costo computacional. tambien se ahorra un
+	 * poco en memoria contigua. Otra estrategia que utilice, es la posibilidad de
+	 * ir almacenando atributos auxiliares en las clases de Procesador que lleva la
+	 * cuenta de tiempos de ejecucion al tener problemas con la recursividad, y el
+	 * atributo size para tener un control del tamanio del arbol de tareas utiles
+	 * para la condicion de agregar una solucion que contenga todas las tareas
+	 * asignadas por completo.
+	 * 
+	 * Luego me di cuenta que interprete muy mal la consigna, intentaba que todas
+	 * las tareas se intenten asignar a CADA procesador, y en realidad se debian
+	 * DISTRIBUIR entre 4 procesadores.
+	 * 
+	 * SE MODIFICO EL CODIGO, ANTES HABIA UN FOR DE PROCESADORES Y AL ENTRAR A BACK
+	 * HABIAN LLAMADAS RECURSIVAS AL ARBOL DE TAREAS, AHORA DENTRO DEL BACK, SE
+	 * HACEN POR CADA TAREA DEL ARBOL, RECORRER LOS DISTINTOS PROCESADORES A DONDE
+	 * SER ASIGNADAS DICHAS TAREAS. NO ESTA FUNCIONANDO LA RECURSION YA QUE AL
+	 * LLEGAR A LA HOJA, SE CORTA LA BUSQUEDA DE LA SOLUCION.
+	 * DESPUES DE TANTOS INTENTOS, PUEDO PENSAR QUE NO EXISTE SOLUCION CON BACKTRACKING EN ESTE PROBLEMA
+	 * 
 	 */
+	
 	// Agregar Tareas con backtracking
-	public Solucion backTracking(Float tiempoLimite) {
+	public Solucion<Tarea> backTracking(Float tiempoLimite) {
 		System.out.println("********* BACKTRACKING : ************");
 		ArbolTarea arbolTareas = this.reader.getArbolTarea();
 		List<Procesador> procesadores = new ArrayList<>(this.reader.getProcesadores().values());
 		List<Tarea> mejorSolucion = new ArrayList<>();
 		float[] mejorTiempo = { Float.MAX_VALUE };
+		int totalEstados = back(arbolTareas.getSize(), arbolTareas.getRoot(), procesadores, tiempoLimite,
+				new ArrayList<>(), mejorSolucion, mejorTiempo);
 
-		for (Procesador procesador : procesadores) {
-			back(procesador, arbolTareas.getRoot(), arbolTareas.getSize(), tiempoLimite, new ArrayList<>(),
-					mejorSolucion, mejorTiempo);
-		}
-
+		// Imprimir TITULO DE RESULTADOS Y TOTAL DE ESTADOS GENERADOS
+		System.out.println("RESULTADOS FINALES DEL BACKTRACKING: ");
+		System.out.println("Total de estados generados: " + totalEstados);
 		// Devolver la mejor solución encontrada como objeto Solucion
-		return new Solucion(mejorSolucion, mejorTiempo[0]);
+		return new Solucion<Tarea>(mejorSolucion, mejorTiempo[0]);
 	}
 
-	// Método de backtracking
-	private int back(Procesador procesador, Node nodo, int tareasSize, Float tiempoLimite, List<Tarea> asignacionActual,
-			List<Tarea> mejorSolucion, float[] mejorTiempo) {
-		int estadosGenerados = 1; // Contador de estados generados
+	
+	private int back(int tareasSize, Node nodo, List<Procesador> procesadores, Float tiempoLimite,
+	        List<Tarea> asignacionActual, List<Tarea> mejorSolucion, float[] mejorTiempo) {
+	    int estadosGenerados = 1; // Contador de estados generados, comienza en 1 para contar el estado actual
 
-		Tarea tarea = nodo.getTarea();
-		Node nodoIzquierdo = nodo.getLeft();
-		Node nodoDerecho = nodo.getRight();
+	    if (nodo == null) {
+	        return estadosGenerados; // Si el nodo es null, se corta la búsqueda
+	    }
 
-		if (cumpleRestricciones(procesador, tarea, tiempoLimite)) {// cumple restricciones
+	    Tarea tarea = nodo.getTarea();
+	    for (Procesador procesador : procesadores) {
+	        if (cumpleRestricciones(procesador, tarea, tiempoLimite)) {
+	            asignacionActual.add(tarea); // Agregar la tarea a la asignación actual
+	            procesador.agregarTarea(tarea); // Agregar la tarea al procesador
 
-			asignacionActual.add(tarea); // Agregar la tarea a la asignación actual
-			procesador.agregarTarea(tarea);// el procesador tambien agrega para contar el tiempo de ejecucion acumulado
+	            // Si la asignación actual alcanzó el tamaño total de tareas, se encontró una solución
+	            if (asignacionActual.size() == tareasSize) {
 
-			if (nodoDerecho == null && nodoIzquierdo == null) {// ES UNA HOJA?
+	                // Calcular el tiempo total de la asignación actual
+	                float tiempoTotal = calcularTiempoTotal(procesadores);
+	                // Si es mejor que la mejor solución encontrada hasta ahora, actualizarla
+	                if (tiempoTotal < mejorTiempo[0]) {
+	                    mejorTiempo[0] = tiempoTotal;
+	                    mejorSolucion.clear();
+	                    mejorSolucion.addAll(asignacionActual);
+	                }
+	            } else {
+	                // Continuar con la asignación de las tareas restantes
+	                estadosGenerados += back(tareasSize, nodo.getLeft(), procesadores, tiempoLimite, asignacionActual,
+	                        mejorSolucion, mejorTiempo);
+	                estadosGenerados += back(tareasSize, nodo.getRight(), procesadores, tiempoLimite, asignacionActual,
+	                        mejorSolucion, mejorTiempo);
+	            }
 
-				if (asignacionActual.size() == tareasSize) { // SI TODAS LAS TAREAS FUERON ASIGNADAS
-					float tiempoAcumulado = procesador.getTiempoTareas(); // OBTENGO EL TIEMPO ACUMULADO DEL PROCESADOR
+	            // Deshacer la asignación actual para probar con otro procesador
+	            asignacionActual.remove(tarea);
+	            procesador.removerTarea(tarea);
+	        }
+	    }
 
-					// ESTA ES UNA ESTRATEGIA QUE CORTA LA BUSQUEDA SI EL TIEMPO ACUMULADO SUPERA AL
-					// MEJOR TIEMPO ENCONTRADO
-					if (tiempoAcumulado <= mejorTiempo[0]) {
-						mejorTiempo[0] = tiempoAcumulado;
-						mejorSolucion.clear();
-						mejorSolucion.addAll(asignacionActual);
+	    return estadosGenerados;
+	}
 
-						// IMPRIME SOLUCION DEL PRIMER PROCESADOR EN ENCONTRARLA
-						System.out.println("Solución actual en procesador :" + procesador.getId());
-						for (Tarea t : asignacionActual) {
-							System.out.println(t);
-						}
-						System.out.println("Tiempo acumulado: " + tiempoAcumulado);
-						System.out.println("-----");
-						// CORTA LA BUSQUEDA Y RETORNA
-						return estadosGenerados;
-					}
-					// Imprimir cada solución actual para control
-					System.out.println("Solución actual en procesador :" + procesador.getId());
-					for (Tarea t : asignacionActual) {
-						System.out.println(t);
-					}
-					System.out.println("Tiempo acumulado: " + tiempoAcumulado);
-					System.out.println("-----");
-				}
-			}
 
-			// CONTINUA EL RECORRIDO
-			if (nodoIzquierdo != null) {
-				estadosGenerados += back(procesador, nodoIzquierdo, tareasSize, tiempoLimite, asignacionActual,
-						mejorSolucion, mejorTiempo);
-			}
-			if (nodoDerecho != null) {
-				estadosGenerados += back(procesador, nodoDerecho, tareasSize, tiempoLimite, asignacionActual,
-						mejorSolucion, mejorTiempo);
-			}
+	// Calcular el tiempo total de ejecución de todas las tareas asignadas a los
+	// procesadores
+	private float calcularTiempoTotal(List<Procesador> procesadores) {
+		float tiempoTotal = 0;
+		for (Procesador procesador : procesadores) {
+			tiempoTotal += procesador.getTiempoTareas();
 		}
-
-		//SI TERMINO LA BUSQUEDA, RETORNO
-		return estadosGenerados;
+		return tiempoTotal;
 	}
 
-	// RESTRICCIONES AL AGREGAR TAREAS
+	// RESTRICCIONES AL AGREGAR TAREAS COMUN PARA BACKTRACKING Y GREEDY
 	private boolean cumpleRestricciones(Procesador procesador, Tarea tarea, Float tiempoLimite) {
 
-		if (tarea.esCritica() && procesador.getCantCriticas() >= 2) { //HAY MAS DE 2 TAREAS CRITICAS?
+		if (tarea.esCritica() && procesador.getCantCriticas() >= 2) { // HAY MAS DE 2 TAREAS CRITICAS?
 			System.out.println("el procesador " + procesador.getId() + " no tolera mas de 2 tareas criticas ");
 			System.out.println(" -------------------------- ");
 			return false;
 		}
 
-		float tiempoTotalConNuevaTarea = procesador.getTiempoTareas() + tarea.getTiempoEjecucion(); //VARIABLE TIEMPO DE EJECUCION
+		float tiempoTotalConNuevaTarea = procesador.getTiempoTareas() + tarea.getTiempoEjecucion(); // VARIABLE TIEMPO
+																									// DE EJECUCION
 
-		if (!procesador.estaRefrigerado() && tiempoTotalConNuevaTarea > tiempoLimite) { //VERIFICA SI NO ESTA REFRIGERADO Y QUE NO EXCEDA TIEMPO
+		if (!procesador.estaRefrigerado() && tiempoTotalConNuevaTarea > tiempoLimite) { // VERIFICA SI NO ESTA
+																						// REFRIGERADO Y QUE NO EXCEDA
+																						// TIEMPO
 			System.out.println("Procesador " + procesador.getId()
 					+ " sin refrigeracion no puede exceder el limite para asignar tarea: " + tarea.getId());
 			System.out.println(" -------------------------- ");
@@ -170,6 +185,68 @@ public class Servicios {
 		}
 
 		return true;
+	}
+
+	/*
+	 * LA ESTRATEGIA PARA EL GREEDY, FUE DE PRIMERO TENER UN COSTO PERMITIDO DE TOMAR EL HASHMAP ARMADO DE TAREAS, PASARLO
+	 * A ARRAYLIST Y ORDENARLO DE MANERA DESCENDENTE. GARANTIZANDO QUE LA PRIMER TAREA ASIGNADA SEA LA MAYOR, ELIMINANDO LA POSIBILIDAD
+	 * DE AGREGARSE EN PROCESADORES CON LIMITACIONES DE TIEMPO DE EJECUCION POR FALTA DE REFRIGERACION Y CORTAR CON EL PROCESO INNECESARIO.
+	 * LUEGO PARA CADA TAREA, ELIJO EL MEJOR PROCESADOR, CALCULANDO LOS TIEMPOS ACUMULADOS Y LA DISPONIBILIDAD DE LOS MISMOS, EVITANDO COLAS DE TAREAS 
+	 * QUE PUEDAN AUMENTAR EL TIEMPO DE EJECUCION MAXIMO.
+	 * UNA VEZ ENCONTRADA LA PRIMER SOLUCION MEJOR POSIBLE, SE DEVUELVE EL RESULTADO CON 16 CANDIDATOS CONSIDERADOS Y UN MAXIMO DE 100 DE EJECUCION.
+	 */
+	public Solucion<Procesador> greedy(Float tiempoLimite) {
+		System.out.println("********* GREEDY : ************");
+		List<Procesador> procesadores = new ArrayList<>(this.reader.getProcesadores().values());
+		List<Tarea> tareas = new ArrayList<>(this.reader.getTareas().values()); // Convertir HashMap a ArrayList
+
+		// ordenar las tareas por tiempo de ejecución descendente
+		tareas.sort((t1, t2) -> Float.compare(t2.getTiempoEjecucion(), t1.getTiempoEjecucion()));
+
+		float tiempoMaximo = 0;
+		int candidatosConsiderados = 0;
+
+		for (Tarea tarea : tareas) {
+			
+			Procesador mejorProcesador = null;
+			float menorTiempoIncrementado = Float.MAX_VALUE;
+
+			// recorre todos los procesadores para encontrar el mejor para asignar la tareas mas pesada
+			for (Procesador procesador : procesadores) {
+				if (cumpleRestricciones(procesador, tarea, tiempoLimite)) {
+					// calculo el tiempo incrementado al asignar la tarea al procesador
+					float tiempoIncrementado = procesador.getTiempoTareas() + tarea.getTiempoEjecucion();
+					if (tiempoIncrementado < menorTiempoIncrementado) {
+						//actualizo procesador indicado
+						mejorProcesador = procesador;
+						menorTiempoIncrementado = tiempoIncrementado;
+					}
+				}
+				candidatosConsiderados++;
+			}
+
+		    // Asignar la tarea al mejor procesador encontrado
+			if (mejorProcesador != null) {
+				mejorProcesador.agregarTarea(tarea);
+				if (mejorProcesador.getTiempoTareas() > tiempoMaximo) {
+					tiempoMaximo = mejorProcesador.getTiempoTareas();
+
+				}
+			} else {
+				System.out.println("No se pudo asignar la tarea: " + tarea.getId());
+			}
+		}
+
+		
+
+		// Imprimir el tiempo máximo de ejecución
+		System.out.println("Tiempo máximo de ejecución: " + tiempoMaximo);
+
+		// Imprimir la métrica de cantidad de candidatos considerados
+		System.out.println("Cantidad de candidatos considerados: " + candidatosConsiderados);
+
+		// Devolver la solución como objeto Solucion
+		return new Solucion<Procesador>(procesadores, tiempoMaximo);
 	}
 
 }
