@@ -6,13 +6,28 @@ import java.util.List;
 public class ArbolTarea {
 	
 	private Node root;
+	private int size;
 
 	public ArbolTarea() {
 		this.root = null;
+		this.size = 0;
+	}
+	
+	public Node getRoot() {
+		return this.root;
+	}
+	
+	public int getSize() {
+		return this.size;
+	}
+	
+	private void incrementarSize() {
+		this.size++;
 	}
 
 	public void insertar(Tarea tarea) {
 		root = insertarTarea(root, tarea);
+		incrementarSize();
 	}
 
 	private Node insertarTarea(Node root, Tarea tarea) {

@@ -92,7 +92,7 @@ public class CSVReader {
 		return lines;
 	}
 
-	//metodos 
+	//METODOS QUE RETORNAN LAS ESTRUCTURAS A UTILIZAR
 	public HashMap<String, Procesador> getProcesadores() {
 		return procesadores;
 	}
@@ -101,7 +101,7 @@ public class CSVReader {
 		return tareas;
 	}
 
-	public ArbolTarea getArbolTarea() {
+	public ArbolTarea getArbolTarea() { //PARA SERVICIO DE RANGO Y EVENTUALMENTE SE USO PARA BACKTRACKING
 		return arbol;
 	}
 }
