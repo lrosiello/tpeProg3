@@ -14,12 +14,13 @@ import tpe.clases.Tarea;
 public class CSVReader {
 
 	private HashMap<String, Procesador> procesadores;
-	private HashMap<String, Tarea> tareas;
+	private HashMap<String, Tarea> tareas, tareasCriticas;
 	private ArbolTarea arbol;
 
 	public CSVReader() {
 		this.procesadores = new HashMap<>();
 		this.tareas = new HashMap<>();
+		this.tareasCriticas = new HashMap<>();
 		this.arbol = new ArbolTarea();
 	}
 
@@ -39,7 +40,11 @@ public class CSVReader {
 			Integer prioridad = Integer.parseInt(line[4].trim());
 			// Aca instanciar lo que necesiten en base a los datos leidos
 			Tarea tarea = new Tarea(id, nombre, tiempo, critica, prioridad);
-			tareas.put(id, tarea); //inserto en Hashmap para el get por id
+			if(tarea.esCritica()) {
+				tareasCriticas.put(id, tarea); //inserto en hashmap tareas criticas
+			}else {
+				tareas.put(id, tarea); //inserto en Hashmap para el get por id
+			}
 			arbol.insertar(tarea); //al mismo tiempo inserto en estructura ABB para rango
 		}
 
@@ -99,6 +104,10 @@ public class CSVReader {
 
 	public HashMap<String, Tarea> getTareas() {
 		return tareas;
+	}
+	
+	public HashMap<String, Tarea> getTareasCriticas() {
+		return tareasCriticas;
 	}
 
 	public ArbolTarea getArbolTarea() { //PARA SERVICIO DE RANGO Y EVENTUALMENTE SE USO PARA BACKTRACKING

@@ -34,9 +34,9 @@ public class ArbolTarea {
 		if (root == null) {
 			return new Node(tarea);
 		}
-		if (tarea.getNivelPrioridad() < root.getTarea().getNivelPrioridad()) {
+		if (tarea.getNivelPrioridad() <= root.getTarea().getNivelPrioridad()) {
 			root.setLeft(insertarTarea(root.getLeft(), tarea)); 
-		} else if (tarea.getNivelPrioridad() > root.getTarea().getNivelPrioridad()) {
+		} else if (tarea.getNivelPrioridad() >= root.getTarea().getNivelPrioridad()) {
 			root.setRight(insertarTarea(root.getRight(), tarea)); 
 		}
 		return root;
@@ -49,18 +49,21 @@ public class ArbolTarea {
 	}
 
 	private void getTareasRango(Node node, int prioridadInferior, int prioridadSuperior, List<Tarea> lista) {
+		
 		if (node == null) {
 			return;
 		}
+	
 		if (node.getTarea().getNivelPrioridad() >= prioridadInferior && node.getTarea().getNivelPrioridad() <= prioridadSuperior) {
+			System.out.println("tarea esta en rango: " + node.getTarea().getNombre() + ", prioridad: " + node.getTarea().getNivelPrioridad());
 			lista.add(node.getTarea());
 		}
-		if (node.getTarea().getNivelPrioridad() > prioridadInferior) {
+		
 			getTareasRango(node.getLeft(), prioridadInferior, prioridadSuperior, lista);
-		}
-		if (node.getTarea().getNivelPrioridad() < prioridadSuperior) {
+		
+
 			getTareasRango(node.getRight(), prioridadInferior, prioridadSuperior, lista);
-		}
+		
 	}
 }
 

@@ -43,28 +43,18 @@ public class Procesador {
 	public List<Tarea> getTareasAsignadas() {
 		return tareasAsignadas;
 	}
-	
-	public void reset() {
-		tareasAsignadas.clear();
-		tiempoTotalTareas=0;
-		cantidadCriticas = 0;
-	}
 
 	public void agregarTarea(Tarea tarea) {
 		if (tarea.esCritica()) {
-			if (this.getCantCriticas() <= 2) {
-				tareasAsignadas.add(tarea);
-				tiempoTotalTareas += tarea.getTiempoEjecucion();
-				cantidadCriticas++;
-			}
-		}else {
-			tareasAsignadas.add(tarea);
-			tiempoTotalTareas += tarea.getTiempoEjecucion();
+			cantidadCriticas++;
 		}
+		tareasAsignadas.add(tarea);
+		tiempoTotalTareas += tarea.getTiempoEjecucion();
+
 	}
 
 	public void removerTarea(Tarea tarea) {
-		if(tarea.esCritica()) {
+		if (tarea.esCritica()) {
 			cantidadCriticas--;
 		}
 		tareasAsignadas.remove(tarea);
